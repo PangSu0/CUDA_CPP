@@ -5,7 +5,6 @@
 #include <cstdlib>
 #define BLOCK_SIZE 16
 
-template <typename T>
 class Matrix
 {
 public:
@@ -23,36 +22,36 @@ public:
 	{
 		return width;
 	}
-	T*& GetElements()
+	double*& GetElements()
 	{
 		return elements;
 	}
 
-	T* GetElements() const
+	double* GetElements() const
 	{
 		return elements;
 	}
 
 	size_t GetSize()const
 	{
-		return height * width * sizeof(T);
+		return height * width * sizeof(double);
 	}
-	T& operator[] (int index)
+	double& operator[] (int index)
 	{
 		return elements[index];
 	}
-	T operator[] (int index) const
+	double operator[] (int index) const
 	{
 		return elements[index];
 	}
-	void SetElements(T* inputElements)
+	void SetElements(double* inputElements)
 	{
 		elements = inputElements;
 	}
 private:
 	int height;
 	int width;
-	T* elements;
+	double* elements;
 };
 
 template <typename T>
