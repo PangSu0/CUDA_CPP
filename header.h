@@ -56,7 +56,7 @@ private:
 };
 
 template <typename T>
-__global__ void MatMulKernel(const Matrix<T> A, const Matrix<T> B, Matrix<T> C)
+__global__ void MatMulKernel( Matrix<T> A,  Matrix<T> B, Matrix<T> C)
 {
 	int row = blockIdx.y * blockDim.y + threadIdx.y;
 	int col = blockIdx.x * blockDim.x + threadIdx.x;
@@ -66,7 +66,7 @@ __global__ void MatMulKernel(const Matrix<T> A, const Matrix<T> B, Matrix<T> C)
 }
 
 template <typename T>
-void MatMul(const Matrix<T> A, const Matrix<T> B, Matrix<T> C)
+void MatMul( Matrix<T> A,  Matrix<T> B, Matrix<T> C)
 {
 	// Load A and B to device memory
 	Matrix<T> d_A(A.GetHeight(), A.GetWidth());
@@ -85,7 +85,7 @@ void MatMul(const Matrix<T> A, const Matrix<T> B, Matrix<T> C)
 
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dimGrid(d_B.GetWidth() / dimBlock.x, d_A.GetHeight() / dimBlock.y);
-	MatMulKernel << < dimBlock, dimGrid >> > (d_A, d_B, d_C);
+	MatMulKernel<T> << < dimBlock, dimGrid >> > (d_A, d_B, d_C);
 
 	cudaMemcpy(C.GetElements(), d_C.GetElements(), C.GetSize(), cudaMemcpyDeviceToHost);
 
