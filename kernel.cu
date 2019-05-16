@@ -1,37 +1,112 @@
-#include "header.h"
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+#define BLOCK_SIZE 10
+
+typedef struct
+{
+	int height;
+	int width;
+	double* elements;
+}Matrix;
+
+__global__ void MatMulKernel(const Matrix, const Matrix, Matrix);
+
+void MatMul(const Matrix A, const Matrix B, Matrix C)
+{
+	// Load A and B to device memory
+	Matrix d_A;
+	d_A.width = A.width; d_A.height = A.height;
+	size_t size = A.width * A.height * sizeof(double);
+	cudaMalloc(&d_A.elements, size);
+	cudaMemcpy(d_A.elements, A.elements, size,
+		cudaMemcpyHostToDevice);
+	Matrix d_B;
+	d_B.width = B.width; d_B.height = B.height;
+	size = B.width * B.height * sizeof(double);
+	cudaMalloc(&d_B.elements, size);
+	cudaMemcpy(d_B.elements, B.elements, size,
+		cudaMemcpyHostToDevice);
+
+	// Allocate C in device memory
+	Matrix d_C;
+	d_C.width = C.width; d_C.height = C.height;
+	size = C.width * C.height * sizeof(double);
+	cudaMalloc(&d_C.elements, size);
+
+	// Invoke kernel
+	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+	dim3 dimGrid(B.width / dimBlock.x, A.height / dimBlock.y);
+	MatMulKernel << <dimGrid, dimBlock >> > (d_A, d_B, d_C);
+
+	// Read C from device memory
+	cudaMemcpy(C.elements, d_C.elements, size, cudaMemcpyDeviceToHost);
+
+	// Free device memory
+	cudaFree(d_A.elements);
+	cudaFree(d_B.elements);
+	cudaFree(d_C.elements);
+}
+
+__global__ void MatMulKernel(Matrix A, Matrix B, Matrix C)
+{
+	// Each thread computes one element of C
+	// by accumulating results into Cvalue
+	float Cvalue = 0;
+	int row = blockIdx.y * blockDim.y + threadIdx.y;
+	int col = blockIdx.x * blockDim.x + threadIdx.x;
+	for (int e = 0; e < A.width; ++e)
+		Cvalue += A.elements[row * A.width + e]
+		* B.elements[e * B.width + col];
+	C.elements[row * C.width + col] = Cvalue;
+}
+
+double ReturnFromZeroToOneExclusives() // 0~1 미포함 값
+{
+	return (double)(rand()+1) / (RAND_MAX + 2);
+}
 
 int main()
 {
+	//srand((unsigned)time(NULL));
+	srand(1);
 	const int arraySizeY = 10;
 	const int arraySizeM = 15;
 	const int arraySizeX = 20;
-	Matrix<int> A(10, 15);
-	Matrix<int> B(15, 20);
-	Matrix<int> C(10, 20);
-	 //행렬 a,b,c 를 만든다.
-	int a[arraySizeY * arraySizeM] = { 0 };
-	int b[arraySizeM * arraySizeX] = { 0 };
-	int c[arraySizeY * arraySizeX] = { 0 };
+	Matrix A;
+	Matrix B;
+	Matrix C;
+	A.height = arraySizeY;
+	A.width = arraySizeM;
+	B.height = arraySizeM;
+	B.width = arraySizeX;
+	C.height = arraySizeY;
+	C.width = arraySizeX;
 
-	// 알맞은 값으로 초기화 한다.
+	double a[arraySizeY * arraySizeM] = { 0 };
+	double b[arraySizeM * arraySizeX] = { 0 };
+	double c[arraySizeY * arraySizeX] = { 0 };
+
 	for (int i = 0; i < arraySizeY * arraySizeM; i++)
-		a[i] = i;
+		a[i] = ReturnFromZeroToOneExclusives();
 	for (int i = 0; i < arraySizeM * arraySizeX; i++)
-		b[i] = i;
+		b[i] = ReturnFromZeroToOneExclusives();
 
-	A.SetElements(a);
-	B.SetElements(b);
-	C.SetElements(c);
+	A.elements = a;
+	B.elements = b;
+	C.elements = c;
 
-	// 작업할 함수를 콜한다.
-	MatMul<int>(A, B ,C);
+	MatMul(A, B ,C);
 
-	// 결과를 출력한다.
 	for (int i = 0; i < arraySizeY * arraySizeX; i++)
 	{
 		if (i % arraySizeY == 0)
 			putchar('\n');
-		printf("%d ", c[i]);
+		printf("%6.10f\t", C.elements[i]);
 	}
 	putchar('\n');
 	cudaDeviceReset();
