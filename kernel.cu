@@ -1,8 +1,11 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
+#include "run.h"
+#include <conio.h>
+#include <list>
 
 using namespace std;
 #define BLOCK_SIZE 10
@@ -72,8 +75,12 @@ double ReturnFromZeroToOneExclusives() // 0~1 미포함 값
 
 int main()
 {
+	std::list<rotation> cubeFormula;
+	CUBE cube(cubeFormula);
+	cube.Setup();
+	
 	//srand((unsigned)time(NULL));
-	srand(1);
+	/*srand(1);
 	const int arraySizeY = 10;
 	const int arraySizeM = 15;
 	const int arraySizeX = 20;
@@ -109,7 +116,7 @@ int main()
 		printf("%6.10f\t", C.elements[i]);
 	}
 	putchar('\n');
-	cudaDeviceReset();
+	cudaDeviceReset();*/
 
 	return 0;
 }

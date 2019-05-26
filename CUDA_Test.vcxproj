@@ -78,10 +78,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="kernel.cu" />
-    <CudaCompile Include="source.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="header.h" />
+    <ClInclude Include="..\CUBE\CUBE\run.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\CUBE\CUBE\run.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
